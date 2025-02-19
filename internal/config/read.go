@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 )
 
-const configFileName = ".gatorconfig.json"
-
 func Read() (Config, error) {
 	var cfg Config
 	filepath, err := getConfigFilePath()
