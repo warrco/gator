@@ -16,14 +16,16 @@ func Read() (Config, error) {
 		return cfg, fmt.Errorf("could not find a home directory for the user: %w", err)
 	}
 
-	filecontent, err := os.ReadFile(filepath)
+	file, err := os.Open(filepath)
 	if err != nil {
 		return cfg, fmt.Errorf("could not read the file: %w", err)
 	}
+	defer file.Close()
 
-	err = json.Unmarshal(filecontent, &cfg)
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&cfg)
 	if err != nil {
-		return cfg, fmt.Errorf("error unmarshalling json: %w", err)
+		return cfg, fmt.Errorf("error decoding json: %w", err)
 	}
 	return cfg, nil
 }
@@ -53,14 +55,16 @@ func write(cfg Config) error {
 		return fmt.Errorf("could not retrieve file path: %w", err)
 	}
 
-	data, err := json.Marshal(cfg)
+	file, err := os.Create(filepath)
 	if err != nil {
-		return fmt.Errorf("failed to marshal data: %w", err)
+		return err
 	}
+	defer file.Close()
 
-	err = os.WriteFile(filepath, data, 0600)
+	encoder := json.NewEncoder(file)
+	err = encoder.Encode(cfg)
 	if err != nil {
-		return fmt.Errorf("failed to write to file: %w", err)
+		return err
 	}
 	return nil
 }
