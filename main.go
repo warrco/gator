@@ -1,22 +1,37 @@
 package main
 
 import (
-	"fmt"
+	"database/sql"
 	"log"
 	"os"
 
+	_ "github.com/lib/pq"
 	"github.com/warrco/gator/internal/commands"
 	"github.com/warrco/gator/internal/config"
+	"github.com/warrco/gator/internal/database"
 )
 
 func main() {
 	cfg, err := config.Read()
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalf("error reading config file: %v", err)
 	}
+
+	db, err := sql.Open("postgres", cfg.DBURL)
+	if err != nil {
+		log.Fatalf("Failed to connect to the database: %v\n", err)
+	}
+	defer db.Close()
+
+	if err := db.Ping(); err != nil {
+		log.Fatalf("Database is unreachable: %v\n", err)
+	}
+
+	dbQueries := database.New(db)
 
 	programState := &commands.State{
 		Config: &cfg,
+		Db:     dbQueries,
 	}
 
 	cmds := commands.Commands{
@@ -24,6 +39,7 @@ func main() {
 	}
 
 	cmds.Register("login", commands.HandlerLogin)
+	cmds.Register("register", commands.HandlerRegister)
 
 	if len(os.Args) < 2 {
 		log.Fatal("Usage: cli <command> [args...]")
