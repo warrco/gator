@@ -18,10 +18,13 @@ func HandlerAgg(s *State, cmd Command) error {
 		return fmt.Errorf("error fetching feed: %w", err)
 	}
 
-	fmt.Printf("Title: %s\n", feed.Channel.Title)
-	fmt.Printf("Description: %s\n", feed.Channel.Description)
-	for _, item := range feed.Channel.Item {
-		fmt.Printf("Item: %s (%s)\n", item.Title, item.Link)
-	}
+	fmt.Printf("%+v\n", *feed)
+	/*
+		fmt.Printf("Title: %s\n", feed.Channel.Title)
+		fmt.Printf("Description: %s\n", feed.Channel.Description)
+		for _, item := range feed.Channel.Item {
+			fmt.Printf("Item: %s (%s)\n", item.Title, item.Link)
+			}
+	*/
 	return nil
 }
