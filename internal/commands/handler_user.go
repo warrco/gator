@@ -78,6 +78,26 @@ func HandlerLogin(s *State, cmd Command) error {
 	return nil
 }
 
+func HandlerUsers(s *State, cmd Command) error {
+	if len(cmd.Args) != 0 {
+		return fmt.Errorf("users command does not take any arguments")
+	}
+	ctx := context.Background()
+
+	users, err := s.Db.GetUsers(ctx)
+	if err != nil {
+		return fmt.Errorf("could not retrieve users: %w", err)
+	}
+	for _, user := range users {
+		if user == s.Config.CurrentUserName {
+			fmt.Printf("* %s (current)\n", user)
+		} else {
+			fmt.Printf("* %s\n", user)
+		}
+	}
+	return nil
+}
+
 func printUser(user database.User) {
 	fmt.Printf(" * ID: 		%v\n", user.ID)
 	fmt.Printf(" * Name		%v\n", user.Name)
