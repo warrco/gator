@@ -7,6 +7,10 @@ RETURNING *;
 SELECT * FROM feeds
 WHERE name = $1;
 
+-- name: GetFeedURL :one
+SELECT * FROM feeds
+WHERE url = $1;
+
 -- name: GetFeeds :many
 SELECT * FROM feeds;
 
