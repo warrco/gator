@@ -72,6 +72,7 @@ func unescapeHTML(r *RSSFeed) *RSSFeed {
 	newFeed.Channel.Link = r.Channel.Link
 
 	for _, item := range r.Channel.Item {
+
 		newItem := RSSItem{
 			Title:       html.UnescapeString(item.Title),
 			Link:        item.Link,

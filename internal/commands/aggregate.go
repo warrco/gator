@@ -2,9 +2,13 @@ package commands
 
 import (
 	"context"
-	"fmt"
+	"database/sql"
 	"log"
+	"strings"
+	"time"
 
+	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/warrco/gator/internal/database"
 )
 
@@ -31,7 +35,33 @@ func scrapeFeed(db *database.Queries, feed database.Feed) {
 	}
 
 	for _, item := range feedData.Channel.Item {
-		fmt.Printf("Found post: %s\n", item.Title)
+		publishedAt := sql.NullTime{}
+		if t, err := time.Parse(time.RFC1123Z, item.PubDate); err == nil {
+			publishedAt = sql.NullTime{
+				Time:  t,
+				Valid: true,
+			}
+		}
+
+		post, err := db.CreatePost(context.Background(), database.CreatePostParams{
+			ID:          uuid.New(),
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+			Title:       item.Title,
+			Url:         item.Link,
+			Description: sql.NullString{String: item.Description, Valid: true},
+			PublishedAt: publishedAt,
+			FeedID:      feed.ID,
+		})
+		if err != nil {
+			if pgErr, ok := err.(*pq.Error); ok {
+				if pgErr.Code == "23505" && strings.Contains(pgErr.Constraint, "url") {
+					continue
+				}
+			}
+			log.Printf("Could not create entry for post %s: %v", post.Title, err)
+			continue
+		}
 	}
 	log.Printf("Feed %s collected, %v posts found", feed.Name, len(feedData.Channel.Item))
 }
