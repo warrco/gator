@@ -9,7 +9,7 @@ import (
 	"github.com/warrco/gator/internal/database"
 )
 
-func HandlerAddFeed(s *State, cmd Command) error {
+func HandlerAddFeed(s *State, cmd Command, user database.User) error {
 	if len(cmd.Args) != 2 {
 		return fmt.Errorf("usage: addfeed <name> <url>")
 	}
@@ -21,18 +21,13 @@ func HandlerAddFeed(s *State, cmd Command) error {
 	current_time := time.Now()
 	follows_id := uuid.New()
 
-	current_user, err := s.Db.GetUser(ctx, s.Config.CurrentUserName)
-	if err != nil {
-		return fmt.Errorf("failed to retrieve the user: %w", err)
-	}
-
 	feed, err := s.Db.CreateFeed(ctx, database.CreateFeedParams{
 		ID:        feed_id,
 		CreatedAt: current_time,
 		UpdatedAt: current_time,
 		Name:      name,
 		Url:       url,
-		UserID:    current_user.ID,
+		UserID:    user.ID,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to add feed to database: %w", err)
@@ -42,7 +37,7 @@ func HandlerAddFeed(s *State, cmd Command) error {
 		ID:        follows_id,
 		CreatedAt: current_time,
 		UpdatedAt: current_time,
-		UserID:    current_user.ID,
+		UserID:    user.ID,
 		FeedID:    feed_id,
 	})
 	if err != nil {
@@ -50,7 +45,7 @@ func HandlerAddFeed(s *State, cmd Command) error {
 	}
 
 	fmt.Println("Feed successfully created:")
-	printFeed(feed, current_user)
+	printFeed(feed, user)
 	fmt.Println()
 	fmt.Println("Feed followed successfully:")
 	printFeedFollow(feed_follow.UserName, feed_follow.FeedName)
