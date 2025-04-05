@@ -1,30 +1,26 @@
 package commands
 
 import (
-	"context"
 	"fmt"
+	"time"
 )
 
 func HandlerAgg(s *State, cmd Command) error {
-	if len(cmd.Args) != 0 {
-		return fmt.Errorf("agg command does not take any arguments")
+	if len(cmd.Args) != 1 {
+		return fmt.Errorf("usage: agg <time (1s, 1m, 1h)>")
 	}
 
-	ctx := context.Background()
-	feedURL := "https://www.wagslane.dev/index.xml"
+	time_between_reqs := cmd.Args[0]
 
-	feed, err := FetchFeed(ctx, feedURL)
+	timeBetweenRequests, err := time.ParseDuration(time_between_reqs)
 	if err != nil {
-		return fmt.Errorf("error fetching feed: %w", err)
+		return fmt.Errorf("failed to parse duration: %w", err)
+	}
+	fmt.Printf("Collecting feeds every %s\n", timeBetweenRequests)
+
+	ticker := time.NewTicker(timeBetweenRequests)
+	for ; ; <-ticker.C {
+		ScrapeFeeds(s)
 	}
 
-	fmt.Printf("%+v\n", *feed)
-	/*
-		fmt.Printf("Title: %s\n", feed.Channel.Title)
-		fmt.Printf("Description: %s\n", feed.Channel.Description)
-		for _, item := range feed.Channel.Item {
-			fmt.Printf("Item: %s (%s)\n", item.Title, item.Link)
-			}
-	*/
-	return nil
 }
